@@ -140,8 +140,7 @@ function selectRecipe(recipeId) {
 
     recipe.steps.forEach((step, index) => {
       const li = document.createElement("li");
-      li.className =
-        "step" + (index === 0 ? " active" : index < 2 ? " done" : "");
+      li.className = index === 0 ? "step active" : "step";
       li.innerHTML = `
         <span class="step-check"></span>
         <span class="step-text">${step.text}</span>
@@ -176,7 +175,7 @@ loadRecipes().then(() => {
 
 // ── Éléments DOM ─────────────────────────────────────────
 const cursor = document.getElementById("cursor");
-const steps = document.querySelectorAll(".step");
+const getSteps = () => document.querySelectorAll(".step");
 const finishOverlay = document.getElementById("finish-overlay");
 const finishReset = document.getElementById("finish-reset");
 const whiskZone = document.getElementById("whisk-zone");
@@ -185,9 +184,8 @@ const RECIPE_ORDER = ["water", "ice", "milk"];
 let nextIdx = 0; // index dans RECIPE_ORDER
 let stepIdx = 0; // étape DOM active (0-indexed) — on commence à "Tamiser 2g de matcha"
 
-// Au chargement, l'étape "tamiser le matcha" est active
-steps.forEach((s) => s.classList.remove("active"));
-if (steps[stepIdx]) steps[stepIdx].classList.add("active");
+getSteps().forEach((s) => s.classList.remove("active"));
+if (getSteps()[stepIdx]) getSteps()[stepIdx].classList.add("active");
 setWhiskActive(false); // désactive la détection du fouettage au démarrage
 
 window.onHandUpdate((hand) => {
@@ -206,45 +204,26 @@ window.onHandUpdate((hand) => {
 
 // ── Drop d'un ingrédient ─────────────────────────────────
 onDrop((id) => {
-  // Cas spécial : première étape "Tamiser 2g de matcha"
-  if (stepIdx === 0 && id === "matcha") {
-    // Valide la première étape
+  console.log(
+    `Tentative de drop de "${id}" à l'étape ${stepIdx} pour l'ingrédient attendu "${recipes[currentRecipe].steps[stepIdx].id}"`,
+  );
+
+  if (id === recipes[currentRecipe].steps[stepIdx].id) {
     confirmDrop();
     completeStep(stepIdx);
-    updateStepIndex(stepIdx + 1); // passe à l'étape suivante
-    nextIdx = 0; // réinitialise pour commencer RECIPE_ORDER
-    if (steps[stepIdx]) steps[stepIdx].classList.add("active");
-  } else if (stepIdx === 0) {
-    // Mauvais ingrédient à l'étape 1
+    updateStepIndex(stepIdx + 1);
+
+    if (stepIdx >= recipes[currentRecipe].steps.length) {
+      setTimeout(showFinish, 700);
+    } else {
+      if (getSteps()[stepIdx]) getSteps()[stepIdx].classList.add("active");
+    }
+  } else {
     console.log(
-      `❌ Erreur étape 1 : l'utilisateur a déposé "${id}" au lieu de "matcha"`,
+      `❌ Erreur étape ${stepIdx} : attendu "${recipes[currentRecipe].steps[stepIdx].id}", reçu "${id}"`,
     );
     rejectDrop();
     spill();
-  } else {
-    // Étapes suivantes : vérifier que c'est l'ingrédient attendu
-    const expected = RECIPE_ORDER[nextIdx];
-
-    if (id === expected) {
-      confirmDrop();
-      completeStep(stepIdx);
-      nextIdx++;
-      updateStepIndex(stepIdx + 1); // utilise la fonction helper
-
-      if (nextIdx >= RECIPE_ORDER.length) {
-        // Tous les ingrédients posés → la recette est terminée !
-        setTimeout(showFinish, 700);
-      } else {
-        if (steps[stepIdx]) steps[stepIdx].classList.add("active");
-      }
-    } else {
-      // Mauvais ingrédient : on remet disponible + animation de renversement
-      console.log(
-        `❌ Erreur étape ${stepIdx + 1} : l'utilisateur a déposé "${id}" au lieu de "${expected}"`,
-      );
-      rejectDrop();
-      spill();
-    }
   }
 });
 
@@ -253,13 +232,16 @@ onWhiskComplete(() => {
   completeStep(stepIdx); // coche "fouetter"
   nextIdx = 1; // reprend à l'index 1 (ice) dans RECIPE_ORDER
   updateStepIndex(3); // utilise la fonction helper (passe à "Ajouter les glaçons")
-  if (steps[stepIdx]) steps[stepIdx].classList.add("active");
+  if (getSteps()[stepIdx]) getSteps()[stepIdx].classList.add("active");
   // N'affiche pas le finish-overlay, on attend les ingrédients suivants
 });
 
 // ── Helpers étapes ───────────────────────────────────────
 function completeStep(idx) {
+  console.log("completed step", idx);
+  const steps = getSteps();
   if (!steps[idx]) return;
+
   steps[idx].classList.remove("active");
   steps[idx].classList.add("done");
 }
@@ -280,7 +262,7 @@ function activateWhiskStep() {
   // stepIdx pointe maintenant sur l'étape "Fouetter en W"
   // Dans le HTML, c'est l'index 2
   updateStepIndex(2);
-  if (steps[stepIdx]) steps[stepIdx].classList.add("active");
+  if (getSteps()[stepIdx]) getSteps()[stepIdx].classList.add("active");
   whiskZone.classList.add("whisk-ready");
 }
 
@@ -366,14 +348,14 @@ function resetRecipe() {
   }
 
   // Réinitialiser les étapes
-  steps.forEach((s) => {
+  getSteps().forEach((s) => {
     s.classList.remove("active", "done");
   });
   stepIdx = 0;
   nextIdx = 0;
 
   // Réactiver l'étape initiale
-  if (steps[stepIdx]) steps[stepIdx].classList.add("active");
+  if (getSteps()[stepIdx]) getSteps()[stepIdx].classList.add("active");
 
   // Réinitialiser le fouettage
   setWhiskActive(false);
