@@ -82,11 +82,14 @@
         <!-- Label plan de travail -->
         <div id="workspace-label">plan de travail</div>
 
+        <!-- Croix d'erreur -->
+        <div id="error-cross" class="hidden"></div>
+
         <!-- BOL central -->
         <div id="bowl-container">
           <div id="bowl">
-            <div id="bowl-liquid"></div>
-            <div id="bowl-foam"></div>
+            <div id="bowl-matcha-layer"></div>
+            <div id="bowl-water-layer"></div>
           </div>
           <div id="bowl-label">bol de préparation</div>
 
@@ -158,9 +161,9 @@
             </svg>
             <div id="whisk-gauge-wrap">
               <div id="whisk-gauge-bar">
-                <div id="whisk-gauge-fill" style="width: 55%"></div>
+                <div id="whisk-gauge-fill" style="width: 0%"></div>
               </div>
-              <span id="whisk-gauge-label">55%</span>
+              <span id="whisk-gauge-label">0%</span>
             </div>
           </div>
         </div>
@@ -171,14 +174,14 @@
         <p class="label">ingrédients</p>
 
         <div id="ingredients-grid">
-          <div class="ingredient used" data-id="matcha" id="ingr-matcha">
+          <div class="ingredient" data-id="matcha" id="ingr-matcha">
             <div class="ingredient-visual matcha-visual"></div>
             <div class="ingredient-name">Matcha</div>
             <div class="ingredient-qty">2 g</div>
             <div class="ingredient-used-badge">ajouté</div>
           </div>
 
-          <div class="ingredient used" data-id="water" id="ingr-water">
+          <div class="ingredient" data-id="water" id="ingr-water">
             <div class="ingredient-visual water-visual"></div>
             <div class="ingredient-name">Eau chaude</div>
             <div class="ingredient-qty">30 ml</div>

@@ -34,7 +34,21 @@ body {
   color: var(--ink);
 }
 
-#webcam,
+#webcam {
+  position: fixed;
+  width: 280px;
+  height: 210px;
+  bottom: 20px;
+  left: 260px;
+  opacity: 1;
+  pointer-events: none;
+  transform: scaleX(-1);
+  object-fit: cover;
+  z-index: 100;
+  border-radius: 8px;
+  border: 2px solid var(--border);
+}
+
 #output {
   position: absolute;
   width: 1px;
@@ -362,26 +376,58 @@ h1 {
   background: #c8c0b4;
   border-radius: 6px 6px 0 0;
 }
-#bowl-liquid {
+#bowl-matcha-layer {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 40px;
+  height: 0;
   background: #4a7c35;
   border-radius: 0 0 68px 68px;
   transition: height 0.6s ease;
 }
-#bowl-foam {
+
+#bowl-water-layer {
   position: absolute;
-  bottom: 36px;
-  left: 14px;
-  right: 14px;
-  height: 10px;
-  background: #7ab060;
-  border-radius: 6px;
-  opacity: 0.7;
-  transition: bottom 0.6s ease;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  background: rgba(168, 206, 222, 0.5);
+  border-radius: 0 0 68px 68px;
+  transition:
+    height 0.6s ease,
+    background 0.8s ease;
+}
+
+/* Pendant le fouettage : les couches deviennent progressivement opales */
+#bowl.mixing #bowl-matcha-layer {
+  background: linear-gradient(to top, #4a7c35, #6a9c45);
+}
+
+#bowl.mixing #bowl-water-layer {
+  background: rgba(106, 156, 69, 0.4);
+  animation: whisk-swirl 0.5s ease-in-out infinite;
+}
+
+/* Après le fouettage complet : les couches fusionnent */
+#bowl.mixed #bowl-matcha-layer {
+  background: #6a9c45;
+}
+
+#bowl.mixed #bowl-water-layer {
+  background: rgba(106, 156, 69, 0.3);
+  animation: none;
+}
+
+@keyframes whisk-swirl {
+  0%,
+  100% {
+    transform: scaleX(0.95);
+  }
+  50% {
+    transform: scaleX(1.05);
+  }
 }
 
 #bowl-label {
@@ -619,14 +665,69 @@ h1 {
 }
 
 #whisk-zone {
-  opacity: 0.4;
+  opacity: 0;
+  pointer-events: none;
   transition: opacity 0.4s ease;
 }
 #whisk-zone.whisk-ready {
   opacity: 1;
+  pointer-events: auto;
 }
 #whisk-zone.whisk-ready #whisk-gauge-bar {
   border: 1px solid var(--matcha-pale);
+}
+
+/* Croix d'erreur */
+#error-cross {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200px;
+  height: 200px;
+  pointer-events: none;
+  z-index: 2000;
+}
+
+#error-cross::before,
+#error-cross::after {
+  content: "";
+  position: absolute;
+  background: #c84a30;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 8px;
+}
+
+#error-cross::before {
+  width: 200px;
+  height: 30px;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+#error-cross::after {
+  width: 200px;
+  height: 30px;
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+#error-cross:not(.hidden) {
+  animation: error-pop 0.6s ease;
+}
+
+@keyframes error-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0);
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
 
 .hidden {
