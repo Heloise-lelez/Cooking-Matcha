@@ -28,6 +28,15 @@ import {
   setCurrentStepId,
 } from "./pour.js";
 
+import {
+  processChop,
+  onChopComplete,
+  resetChop,
+  setChopActive,
+  showChocolateOnBoard,
+  hideChocolateOnBoard,
+} from "./chop.js";
+
 // ── Éléments DOM ─────────────────────────────────────────
 const cursor = document.getElementById("cursor");
 const getSteps = () => document.querySelectorAll(".step");
@@ -35,10 +44,13 @@ const finishOverlay = document.getElementById("finish-overlay");
 const finishReset = document.getElementById("finish-reset");
 const whiskZone = document.getElementById("whisk-zone");
 const glassContainer = document.getElementById("glass-container");
+const ovenContainer = document.getElementById("oven-container");
+const cuttingBoardContainer = document.getElementById("cutting-board-container");
 
-const RECIPE_ORDER = ["water", "ice", "milk"];
-let nextIdx = 0; // index dans RECIPE_ORDER
-let stepIdx = 0; // étape DOM active (0-indexed) — on commence à "Tamiser 2g de matcha"
+let nextIdx = 0;
+let stepIdx = 0;
+let chocolateIsCut = false;
+
 
 getSteps().forEach((s) => s.classList.remove("active"));
 if (getSteps()[stepIdx]) getSteps()[stepIdx].classList.add("active");
@@ -64,41 +76,44 @@ window.onHandUpdate((hand) => {
   processDrag({ ...hand, x: 1 - hand.x, y: hand.y });
   processWhisk(hand);
   processPour(hand, hand.landmarks);
-
-  // Modules (passer les coordonnées transformées)
-  processDrag({ ...hand, x: 1 - hand.x, y: hand.y });
-  processWhisk(hand);
+  processChop({ ...hand, x: 1 - hand.x, y: hand.y });
 });
 
 // ── Drop d'un ingrédient ─────────────────────────────────
-onDrop((id) => {
+onDrop((id, target) => {
   const recipe = getCurrentRecipe();
   if (!recipe) return;
 
   const currentStep = recipe.steps[stepIdx];
   const expectedAtStep = currentStep?.id;
 
-  console.log(
-    `Tentative de drop de "${id}" à l'étape ${stepIdx}, attendu "${expectedAtStep}"`,
-  );
+  console.log(`Drop: "${id}" sur "${target}" | attendu: "${expectedAtStep}"`);
 
-  if (id === expectedAtStep) {
-    console.log(
-      `✅ Ingrédient "${id}" ajouté avec succès à l'étape ${stepIdx}!`,
-    );
+  // Étape 1: chocolate → board
+  if (expectedAtStep === "chocolate" && target === "board") {
+    confirmDrop();
+    showChocolateOnBoard(); // affiche le bloc à découper
+    completeStep(stepIdx);
+    updateStepIndex(stepIdx + 1); // → étape "chop"
+    return;
+  }
+
+  // Étape 3: chopped-chocolate → bowl (SEULEMENT après chop)
+  if (expectedAtStep === "chopped-chocolate" && target === "bowl" && chocolateIsCut) {
+    confirmDrop();
+    hideChocolateOnBoard(); // cache les morceaux utilisés
+    completeStep(stepIdx);
+    updateStepIndex(stepIdx + 1); // → étape "whisk"
+    return;
+  }
+
+  // Autres drops normaux
+  const expectedTarget = expectedAtStep === "chocolate" ? "board" : "bowl";
+  if (id === expectedAtStep && target === expectedTarget) {
     confirmDrop();
     completeStep(stepIdx);
     updateStepIndex(stepIdx + 1);
-
-    if (stepIdx >= recipe.steps.length) {
-      setTimeout(showFinish, 700);
-    } else {
-      if (getSteps()[stepIdx]) getSteps()[stepIdx].classList.add("active");
-    }
   } else {
-    console.log(
-      `❌ Erreur étape ${stepIdx} : attendu "${expectedAtStep}", reçu "${id}"`,
-    );
     rejectDrop();
     handleError();
   }
@@ -107,10 +122,30 @@ onDrop((id) => {
 // ── Fouettage terminé ────────────────────────────────────
 onWhiskComplete(() => {
   completeStep(stepIdx); // coche "fouetter"
-  nextIdx = 1; // reprend à l'index 1 (ice) dans RECIPE_ORDER
-  updateStepIndex(3); // utilise la fonction helper (passe à "Ajouter les glaçons")
+  resetWhisk(); // réinitialise la jauge pour le prochain whisk
+  updateStepIndex(stepIdx + 1); // avance à l'étape suivante
   if (getSteps()[stepIdx]) getSteps()[stepIdx].classList.add("active");
-  // N'affiche pas le finish-overlay, on attend les ingrédients suivants
+
+  // Vérifier si on a terminé la recette
+  const recipe = getCurrentRecipe();
+  if (stepIdx >= recipe.steps.length) {
+    setTimeout(showFinish, 700);
+  }
+});
+
+// ── Coupage terminé ────────────────────────────────────
+onChopComplete(() => {
+  chocolateIsCut = true;
+  completeStep(stepIdx); // coche "couper"
+  resetChop();
+  updateStepIndex(stepIdx + 1); // avance à l'étape suivante
+  if (getSteps()[stepIdx]) getSteps()[stepIdx].classList.add("active");
+
+  // Vérifier si on a terminé la recette
+  const recipe = getCurrentRecipe();
+  if (stepIdx >= recipe.steps.length) {
+    setTimeout(showFinish, 700);
+  }
 });
 
 // ── Helpers étapes ───────────────────────────────────────
@@ -140,11 +175,43 @@ function updateStepIndex(newIdx) {
     whiskZone.classList.remove("whisk-ready"); // cache la whisk zone
   }
 
+  if (currentStep?.id === "chop") {
+    setChopActive(true);
+  } else {
+    setChopActive(false);
+  }
+
   // Gère l'activation/désactivation du grab du bol selon l'étape
   setBowlGrabEnabled(currentStep?.id === "pour");
 
   // Transmet l'id de l'étape courante au module versement
   setCurrentStepId(currentStep?.id);
+
+  // Mettre à jour l'affichage du matériel selon le type de recette
+  updateRecipeUI();
+}
+
+function updateRecipeUI() {
+  const recipe = getCurrentRecipe();
+  if (!recipe) return;
+
+  // Afficher le verre pour les boissons (drinks)
+  if (recipe.type === "drink") {
+    glassContainer.style.display = "flex";
+    ovenContainer.style.display = "none";
+  cuttingBoardContainer.style.display = "none";
+}
+  // Afficher le four pour les gâteaux (baking)
+  else if (recipe.type === "baking") {
+    glassContainer.style.display = "none";
+    ovenContainer.style.display = "flex";
+    cuttingBoardContainer.style.display = "flex";
+  }
+  // Par défaut: verre
+  else {
+    glassContainer.style.display = "flex";
+    ovenContainer.style.display = "none";
+  }
 }
 
 function activateWhiskStep() {
@@ -179,6 +246,7 @@ function handleError() {
   // 3. Réinitialiser la recette après les animations
   setTimeout(() => {
     resetRecipe();
+    hideChocolateOnBoard();
   }, 700);
 }
 
@@ -228,6 +296,12 @@ function playErrorSound() {
 
 function resetRecipe() {
   console.log("Resetting recipe state...");
+
+  // Mettre à jour l'affichage verre/four selon la recette
+  updateRecipeUI();
+  chocolateIsCut = false;
+  hideChocolateOnBoard();
+
   const bowl = document.getElementById("bowl");
   const glassIce = document.getElementById("glass-ice");
 
@@ -347,6 +421,11 @@ window.onload = () => {
   initLoadRecipes();
   console.log("Page loaded, initializing recipes and speech recognition...");
 
+  // Attendre le chargement des recettes puis mettre à jour l'affichage
+  setTimeout(() => {
+    updateRecipeUI();
+  }, 500);
+
   // Écouter les changements de recette
   let lastRecipeId = null;
   const observeRecipeChange = setInterval(() => {
@@ -355,6 +434,7 @@ window.onload = () => {
 
     if (currentRecipeId && currentRecipeId !== lastRecipeId) {
       lastRecipeId = currentRecipeId;
+      updateRecipeUI();
       resetRecipe();
     }
   }, 100);

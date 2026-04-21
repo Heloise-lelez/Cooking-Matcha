@@ -17,6 +17,11 @@
   --done-border: #b0c8a0;
 
   font-family: "DM Sans", sans-serif;
+
+
+  --dx: 12px;
+  --dy: -8px;
+  --rot: 6deg;
 }
 
 *,
@@ -360,7 +365,9 @@ h1 {
 }
 
 #bowl-container,
-#glass-container {
+#glass-container,
+#oven-container,
+#cutting-board-container {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -485,7 +492,9 @@ h1 {
 }
 
 #bowl-label,
-#glass-label {
+#glass-label,
+#oven-label,
+#cutting-board-label {
   font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -567,7 +576,7 @@ h1 {
   flex-shrink: 0;
 }
 .matcha-visual {
-  background: #5c8a4a;
+  background: var(--matcha);
 }
 .water-visual {
   background: #a8cede;
@@ -787,7 +796,7 @@ h1 {
   bottom: 0;
   width: 100%;
   height: 0;
-  background: linear-gradient(180deg, #7ab060, #5c8a4a);
+  background: linear-gradient(180deg, #7ab060, var(--matcha));
   transition: height 0.08s ease;
   border-radius: 0 0 4px 4px;
 }
@@ -828,6 +837,250 @@ h1 {
 }
 #whisk-zone.whisk-ready #whisk-gauge-bar {
   border: 1px solid var(--matcha-pale);
+}
+
+/* ── Four ── */
+#oven-container {
+  position: absolute;
+  left: 120px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+#oven {
+  width: 130px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Corps principal */
+.oven-body {
+  width: 130px;
+  height: 120px;
+  background: #d4c8b8;
+  border-radius: 8px 8px 0 0;
+  border: 2px solid #a89880;
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    inset 0 2px 4px rgba(255,255,255,0.3),
+    inset 0 -2px 4px rgba(0,0,0,0.08);
+}
+
+/* Vitre de la porte — occupe la majorité du corps */
+.oven-window {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  bottom: 28px;
+  border-radius: 5px;
+  background: #2e2418;
+  border: 2px solid #7a6850;
+  overflow: hidden;
+}
+
+/* Reflet vitre */
+.oven-window::before {
+  content: "";
+  position: absolute;
+  top: 5px;
+  left: 7px;
+  width: 28px;
+  height: 6px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 3px;
+}
+
+/* Chaleur intérieure */
+.oven-heat {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at 50% 100%,
+    rgba(255, 120, 20, 0.55) 0%,
+    rgba(255, 60, 0, 0.15) 60%,
+    transparent 100%
+  );
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+#oven-container.oven-ready .oven-heat {
+  opacity: 1;
+  animation: oven-flicker 1.6s ease-in-out infinite;
+}
+
+@keyframes oven-flicker {
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 1;   }
+}
+
+/* Bandeau boutons en bas du corps */
+.oven-knobs {
+  position: absolute;
+  bottom: 6px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+}
+
+.oven-knob {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #8a7860;
+  border: 1.5px solid #6a5840;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+}
+
+/* Highlight actif */
+#oven-container.oven-ready .oven-body {
+  border-color: var(--matcha);
+  box-shadow:
+    inset 0 2px 4px rgba(255,255,255,0.3),
+    0 0 0 3px var(--matcha-pale);
+}
+
+#oven-container.oven-complete {
+  animation: ovenSuccess 0.4s ease;
+}
+
+@keyframes ovenSuccess {
+  0%   { transform: translateY(-50%) scale(1);    }
+  50%  { transform: translateY(-50%) scale(1.05); }
+  100% { transform: translateY(-50%) scale(1);    }
+}
+
+#oven-liquid { display: none; }
+
+#oven-label {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--wood-grain);
+}
+
+/* ── Planche à découper ── */
+#cutting-board-container {
+  position: absolute;
+  bottom: 20%;
+  right: 12px;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+#cutting-board {
+  width: 200px;
+  height: 140px;
+  background: #c8a96e;
+  border-radius: 10px;
+  border: 2px solid #a07840;
+  position: relative;
+  overflow: visible;
+  box-shadow:
+    inset 0 2px 6px rgba(0,0,0,0.12),
+    0 4px 12px rgba(0,0,0,0.15);
+}
+
+#cutting-board.drop-hover {
+  border-color: var(--matcha);
+  box-shadow:
+    inset 0 2px 6px rgba(0,0,0,0.12),
+    0 0 0 3px var(--matcha-pale);
+}
+
+/* Petite poignée à droite */
+#cutting-board::after {
+  content: "";
+  position: absolute;
+  right: -22px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 44px;
+  background: #b89050;
+  border-radius: 0 8px 8px 0;
+  border: 2px solid #a07840;
+  border-left: none;
+}
+
+/* Rainures décoratives */
+.board-grain {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  height: 1px;
+  background: rgba(160, 120, 60, 0.25);
+  border-radius: 1px;
+}
+.board-grain:nth-child(1) { top: 35px; }
+.board-grain:nth-child(2) { top: 70px; }
+.board-grain:nth-child(3) { top: 105px; }
+
+/* ── Bloc de chocolat ── */
+#chocolate-block {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: none; /* affiché via JS quand l'ingrédient est déposé */
+}
+
+#chocolate-block.visible {
+  display: block;
+}
+
+.choc-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 22px);
+  grid-template-rows: repeat(3, 22px);
+  gap: 2px;
+  padding: 4px;
+  background: #e8d9a0;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.choc-square {
+  width: 22px;
+  height: 22px;
+  background: #fdf3c0;
+  border-radius: 2px;
+  border: 1px solid #c9a84c;
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+.choc-square.cut {
+  opacity: 0;
+  transform: scale(0.6) rotate(15deg);
+}
+
+/* Highlight quand la planche est la cible active */
+#cutting-board-container.chop-active #cutting-board {
+  border-color: var(--matcha);
+  box-shadow:
+    inset 0 2px 6px rgba(0,0,0,0.12),
+    0 0 0 3px var(--matcha-pale),
+    0 4px 12px rgba(0,0,0,0.15);
+}
+
+#cutting-board-label {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--wood-grain);
 }
 
 /* Croix d'erreur */
@@ -885,4 +1138,54 @@ h1 {
 
 .hidden {
   display: none !important;
+}
+
+#chocolate-block.breaking {
+  animation: crack 220ms ease-out;
+}
+
+@keyframes crack {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.03) rotate(-1deg); }
+  100% { transform: scale(1); }
+}
+
+.choc-piece {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  opacity: 0;
+  transform: translate(0, 0) scale(0.7);
+  transition: transform 220ms ease, opacity 220ms ease;
+}
+
+#chocolate-pieces.visible .choc-piece {
+  opacity: 1;
+  transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(1);
+}
+
+.choc-piece .ingredient-visual {
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  background: #fdf3c0;
+  border: 1px solid #d4c070;
+  margin: 2px;
+  box-shadow:
+          inset 1px 1px 2px rgba(255,255,255,0.4),
+          inset -1px -1px 2px rgba(0,0,0,0.1);
+}
+
+#chocolate-pieces {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 96px;
+  height: 78px;
+  pointer-events: none; /* au début, pour ne pas gêner la découpe */
+}
+
+#chocolate-pieces.visible {
+  pointer-events: auto; /* activé après découpe pour drag */
 }

@@ -7,6 +7,7 @@ const bowlMatchaLayer = document.getElementById("bowl-matcha-layer");
 const bowlWaterLayer = document.getElementById("bowl-water-layer");
 const bowlIceLayer = document.getElementById("bowl-ice-layer");
 const glassIce = document.getElementById("glass-ice");
+const cuttingBoard = document.getElementById("cutting-board-container");
 
 let draggedItem = null; // élément .ingredient en cours de drag
 let bowlGrabbed = false; // le bol est-il attrapé au pinch?
@@ -118,7 +119,9 @@ export function processDrag(hand) {
   // Fin du pinch : dépose ou annule
   if (pinchEnded) {
     if (draggedItem) {
-      if (isOverBowl(x, y)) {
+      if (isOverCuttingBoard(x, y)) {
+        dropOnBowl(draggedItem, "board");
+      } else if (isOverBowl(x, y)) {
         dropOnBowl(draggedItem);
       } else {
         cancelDrag();
@@ -216,6 +219,7 @@ function moveDrag(x, y) {
 
   // Feedback visuel : bol s'illumine si on survole
   bowl.classList.toggle("drop-hover", isOverBowl(x, y));
+  cuttingBoard.classList.toggle("drop-hover", isOverCuttingBoard(x, y));
 }
 
 function cancelDrag() {
@@ -223,14 +227,16 @@ function cancelDrag() {
   draggedItem = null;
   ghost.classList.add("hidden");
   bowl.classList.remove("drop-hover");
+  cuttingBoard.classList.remove("drop-hover");
 }
 
-function dropOnBowl(el) {
+function dropOnBowl(el, target = "bowl") {
   const id = el.dataset.id;
 
   el.classList.remove("grabbed");
   draggedItem = null;
   bowl.classList.remove("drop-hover");
+  cuttingBoard.classList.remove("drop-hover");
 
   pendingDropItem = el;
 
@@ -243,7 +249,7 @@ function dropOnBowl(el) {
 
   animatePhysicsDrop(ghostLeft, ghostTop, ghostColor, () => {
     // Une fois la chute terminée, notifie script.js
-    dropCallbacks.forEach((cb) => cb(id));
+    dropCallbacks.forEach((cb) => cb(id, target));
   });
 }
 
@@ -395,7 +401,7 @@ function updateBowl(id) {
     bowlMatchaLayer.style.height = matchaHeight + "px";
     bowlMatchaLayer.style.background = LIQUID_COLORS.milk;
     bowlIceLayer.style.marginBottom = matchaHeight - iceHeight + "px";
-  } else {
+  } else if (id !== "chocolate") {
     // Autres ingrédients (lait, etc.)
     lastIngredient = id;
     totalHeight = Math.min(maxH, totalHeight + 22);
@@ -442,4 +448,22 @@ function animateDrop(leftPx, topPx, ghostColor) {
   drop.style.transform = "translate(-50%, -50%) scale(0.2)";
 
   setTimeout(() => drop.remove(), 400);
+}
+
+function isOverCuttingBoard(x, y) {
+  if (!cuttingBoard) return false;
+  const r = cuttingBoard.getBoundingClientRect();
+
+  // Si le container est caché, getBoundingClientRect retourne des zéros
+  if (r.width === 0 || r.height === 0) return false;
+
+  console.log("Board rect:", r.left, r.top, r.right, r.bottom, "| cursor:", x, y);
+
+  const margin = 40;
+  return (
+    x > r.left - margin &&
+    x < r.right + margin &&
+    y > r.top - margin &&
+    y < r.bottom + margin
+  );
 }
