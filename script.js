@@ -38,6 +38,13 @@ import {
   hideChocolateOnBoard,
 } from "./chop.js";
 
+import {
+  processOven,
+  onOvenComplete,
+  resetOven,
+  setOvenActive,
+} from "./oven.js";
+
 // ── Éléments DOM ─────────────────────────────────────────
 const cursor = document.getElementById("cursor");
 const getSteps = () => document.querySelectorAll(".step");
@@ -65,6 +72,19 @@ onPourComplete(() => {
   setTimeout(showFinish, 700);
 });
 
+// ── Écouter la fin de la cuisson ─────────────────────────
+onOvenComplete(() => {
+  completeStep(stepIdx);
+  updateStepIndex(stepIdx + 1);
+  if (getSteps()[stepIdx]) getSteps()[stepIdx].classList.add("active");
+
+  // Vérifier si on a terminé la recette
+  const recipe = getCurrentRecipe();
+  if (stepIdx >= recipe.steps.length) {
+    setTimeout(showFinish, 700);
+  }
+});
+
 window.onHandUpdate((hand) => {
   const x = (1 - hand.x) * window.innerWidth; // Flip X to match mirrored camera
   const y = hand.y * window.innerHeight;
@@ -79,6 +99,7 @@ window.onHandUpdate((hand) => {
   processWhisk(hand);
   processPour(hand, hand.landmarks);
   processChop({ ...hand, x: 1 - hand.x, y: hand.y });
+  processOven(hand);
 });
 
 // ── Drop d'un ingrédient ─────────────────────────────────
@@ -118,6 +139,16 @@ onDrop((id, target) => {
     expectedAtStep === "chopped-chocolate" &&
     id === "chopped-chocolate" &&
     target === "board"
+  ) {
+    rejectDrop();
+    return;
+  }
+
+  // Ignorer le drop de chocolate sur le bol (pas d'erreur, juste le rejeter)
+  if (
+    expectedAtStep === "chocolate" &&
+    id === "chocolate" &&
+    target === "bowl"
   ) {
     rejectDrop();
     return;
@@ -197,8 +228,16 @@ function updateStepIndex(newIdx) {
     setChopActive(false);
   }
 
+  if (currentStep?.id === "oven") {
+    setOvenActive(true);
+    setBowlGrabEnabled(true); // permettre de saisir le bol pour le mettre au four
+  } else {
+    setOvenActive(false);
+    setBowlGrabEnabled(false);
+  }
+
   // Gère l'activation/désactivation du grab du bol selon l'étape
-  setBowlGrabEnabled(currentStep?.id === "pour");
+  setBowlGrabEnabled(currentStep?.id === "pour" || currentStep?.id === "oven");
 
   // Transmet l'id de l'étape courante au module versement
   setCurrentStepId(currentStep?.id);
@@ -364,6 +403,9 @@ function resetRecipe() {
 
   // Réinitialiser la découpe du chocolat
   resetChop();
+
+  // Réinitialiser le four
+  resetOven();
 }
 
 // ── Confettis canvas ─────────────────────────────────────
