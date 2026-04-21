@@ -1,5 +1,7 @@
 // drag.js — gestion du pinch + drag des ingrédients vers le bol + drag du bol
 
+import { isOvenCooking } from "./oven.js";
+
 const ghost = document.getElementById("drag-ghost");
 const ghostCircle = ghost.querySelector(".drag-ghost-circle");
 const bowl = document.getElementById("bowl");
@@ -34,7 +36,6 @@ let sugarHeight = 0; // hauteur du sucre
 let eggHeight = 0; // hauteur de l'œuf
 let flourHeight = 0; // hauteur de la farine
 let chocolateHeight = 0; // hauteur du chocolat
-
 
 // ── Couleurs du bol selon ingrédient ajouté ──────────────
 const LIQUID_COLORS = {
@@ -201,7 +202,12 @@ function releaseBowl() {
   console.log("Bowl released");
   bowlGrabbed = false;
   bowl.classList.remove("grabbed");
-  bowlOffset = { x: 0, y: 0 };
+
+  // Ne pas réinitialiser la position du bol s'il est en train de cuire au four
+  if (!isOvenCooking()) {
+    bowlOffset = { x: 0, y: 0 };
+  }
+
   ghost.classList.add("hidden");
 }
 
@@ -439,7 +445,7 @@ function updateBowl(id) {
     bowlMatchaLayer.style.background = LIQUID_COLORS.milk;
     bowlIceLayer.style.marginBottom = matchaHeight - iceHeight + "px";
   } else if (id === "butter") {
-    butterHeight = 10 + matchaHeight
+    butterHeight = 10 + matchaHeight;
     bowlButterLayer.style.height = butterHeight + "px";
     bowlButterLayer.style.background = LIQUID_COLORS.butter;
   } else if (id === "sugar") {
@@ -455,7 +461,7 @@ function updateBowl(id) {
     bowlFlourLayer.style.height = flourHeight + "px";
     bowlFlourLayer.style.background = LIQUID_COLORS.flour;
   } else if (id === "chocolate") {
-    chocolateHeight = 20 + flourHeight
+    chocolateHeight = 20 + flourHeight;
     bowlChocolateLayer.style.height = chocolateHeight + "px";
     bowlChocolateLayer.style.background = LIQUID_COLORS.chocolate;
   } else if (id !== "chocolate") {
