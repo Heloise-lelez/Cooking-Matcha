@@ -157,24 +157,18 @@ function startBowlDrag(x, y) {
 }
 
 function moveBowlDrag(x, y) {
-  // Calculer le déplacement depuis le grip initial
   const offsetX = x - bowlGrabPos.x;
   const offsetY = y - bowlGrabPos.y;
-
   bowlOffset = { x: offsetX, y: offsetY };
 
-  // Appliquer le transform au bol
-  bowl.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
-
-  // Le ghost suit aussi la main
   ghost.style.left = x + "px";
   ghost.style.top = y + "px";
 }
 
 function releaseBowl() {
+  console.log("Bowl released");
   bowlGrabbed = false;
   bowl.classList.remove("grabbed");
-  bowl.style.transform = "translate(0px, 0px)";
   bowlOffset = { x: 0, y: 0 };
   ghost.classList.add("hidden");
 }
@@ -236,14 +230,125 @@ function dropOnBowl(el) {
 
   el.classList.remove("grabbed");
   draggedItem = null;
-  ghost.classList.add("hidden");
   bowl.classList.remove("drop-hover");
 
-  // Marquer comme en attente de validation (pas encore "used")
   pendingDropItem = el;
 
-  // Notifie script.js
-  dropCallbacks.forEach((cb) => cb(id));
+  // Lance l'animation de chute AVANT de notifier script.js
+  const ghostLeft = ghost.style.left;
+  const ghostTop = ghost.style.top;
+  const ghostColor = ghostCircle.style.background;
+
+  ghost.classList.add("hidden"); // cache l'original
+
+  animatePhysicsDrop(ghostLeft, ghostTop, ghostColor, () => {
+    // Une fois la chute terminée, notifie script.js
+    dropCallbacks.forEach((cb) => cb(id));
+  });
+}
+
+// Nouvelle fonction — chute avec rebond
+function animatePhysicsDrop(leftPx, topPx, color, onLanded) {
+  const drop = document.createElement("div");
+  const bowlRect = bowl.getBoundingClientRect();
+  const targetX = bowlRect.left + bowlRect.width / 2;
+  const targetY = bowlRect.top + bowlRect.height * 0.7; // atterrit dans le fond du bol
+
+  // Extraire les valeurs numériques
+  const startX = parseFloat(leftPx);
+  const startY = parseFloat(topPx);
+
+  drop.style.cssText = `
+    position: fixed;
+    left: ${startX}px;
+    top: ${startY}px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: ${color};
+    border: 2px solid rgba(255,255,255,0.6);
+    opacity: 0.9;
+    pointer-events: none;
+    z-index: 998;
+    transform: translate(-50%, -50%) scale(1);
+    transition: none;
+  `;
+  document.body.appendChild(drop);
+
+  const duration = 380; // ms pour tomber
+  const startTime = performance.now();
+
+  function fall(now) {
+    const elapsed = now - startTime;
+    const t = Math.min(elapsed / duration, 1);
+
+    // Easing : accélération vers le bas (gravité)
+    const eased = t * t;
+
+    // Position interpolée
+    const x = startX + (targetX - startX) * t; // horizontal : linéaire
+    const y = startY + (targetY - startY) * eased; // vertical : accéléré
+
+    // Légère rotation pendant la chute
+    const rotation = t * 180;
+
+    // Rétrécissement à l'impact
+    const scale = t < 0.85 ? 1 : 1 - ((t - 0.85) / 0.15) * 0.4;
+
+    drop.style.left = x + "px";
+    drop.style.top = y + "px";
+    drop.style.transform = `translate(-50%, -50%) rotate(${rotation}deg) scale(${scale})`;
+    drop.style.opacity = t < 0.8 ? "0.9" : String(0.9 * (1 - (t - 0.8) / 0.2));
+
+    if (t < 1) {
+      requestAnimationFrame(fall);
+    } else {
+      drop.remove();
+      splashEffect(targetX, targetY, color); // petite éclaboussure
+      onLanded();
+    }
+  }
+
+  requestAnimationFrame(fall);
+}
+// Effet d'éclaboussure au moment de l'impact
+function splashEffect(cx, cy, color) {
+  const COUNT = 6;
+  for (let i = 0; i < COUNT; i++) {
+    const particle = document.createElement("div");
+    const angle = (i / COUNT) * Math.PI * 2;
+    const speed = 30 + Math.random() * 20;
+
+    particle.style.cssText = `
+      position: fixed;
+      left: ${cx}px;
+      top: ${cy}px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: ${color};
+      opacity: 0.8;
+      pointer-events: none;
+      z-index: 997;
+      transform: translate(-50%, -50%);
+      transition:
+        left 0.3s ease-out,
+        top 0.3s ease-out,
+        opacity 0.3s ease-out,
+        transform 0.3s ease-out;
+    `;
+    document.body.appendChild(particle);
+
+    // Force reflow
+    particle.getBoundingClientRect();
+
+    particle.style.left = cx + Math.cos(angle) * speed + "px";
+    particle.style.top = cy + Math.sin(angle) * speed + "px";
+    particle.style.opacity = "0";
+    particle.style.transform = "translate(-50%, -50%) scale(0.2)";
+
+    setTimeout(() => particle.remove(), 350);
+  }
 }
 
 function updateBowl(id) {
