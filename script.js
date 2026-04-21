@@ -15,6 +15,7 @@ import {
   initLoadRecipes,
   getCurrentRecipe,
   initFinishRecognition,
+  resetSpeechRecognition,
 } from "./speech-recognition.js";
 
 
@@ -299,8 +300,20 @@ window.onload = () => {
   const observeRecipeChange = setInterval(() => {
     const recipe = getCurrentRecipe();
     if (recipe) {
-      updateRecipeUI(recipe);
       clearInterval(observeRecipeChange);
     }
   }, 100);
+};
+
+// Listener pour réinitialiser le jeu quand on change de recette depuis l'écran de fin
+window.addEventListener("recipeReset", () => {
+  resetRecipe();
+});
+
+// Listener pour réinitialiser la reconnaissance vocale
+const micResetBtn = document.getElementById("mic-reset");
+if (micResetBtn) {
+  micResetBtn.addEventListener("click", () => {
+    resetSpeechRecognition();
+  });
 }

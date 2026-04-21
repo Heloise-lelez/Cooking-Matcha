@@ -102,10 +102,6 @@ recognition.onresult = (event) => {
   } else {
     micLabel.textContent = `écoute: "${transcript}"`;
   }
-
-  if (currentRecipeId && recipes[currentRecipeId]) {
-    loadIngredients(recipes[currentRecipeId].ingredients);
-  }
 };
 
 function selectRecipe(recipeId) {
@@ -137,6 +133,9 @@ function selectRecipe(recipeId) {
   } else {
     recipeStepsSection.classList.add("hidden");
   }
+  
+  // Charger les ingrédients seulement quand on change de recette
+  loadIngredients(recipe.ingredients);
 }
 
 function renderRecipeChips() {
@@ -174,10 +173,64 @@ export function getRecipes() {
   return recipes;
 }
 
-// ── Reconnaissance vocale pour l'écran de fin ────────────────────────────
+export function resetSpeechRecognition() {
+  console.log("Réinitialisation de la reconnaissance vocale...");
+  try {
+    recognition.stop();
+    recognition.abort();
+  } catch (e) {
+    console.warn("Erreur lors de l'arrêt de la reconnaissance:", e);
+  }
+  
+  // Réinitialiser les propriétés
+  recognition.lang = "fr-FR";
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  
+  // Redémarrer
+  try {
+    recognition.start();
+    const micLabel = document.getElementById("mic-label");
+    if (micLabel) micLabel.textContent = "en écoute…";
+  } catch (e) {
+    console.warn("Erreur lors du redémarrage de la reconnaissance:", e);
+  }
+}
+
+export function resetAndSelectRecipe(recipeId) {
+  if (!recipes[recipeId]) {
+    recipeId = allRecipes[0].id;
+  }
+  
+  if (finishRecognition) {
+    finishRecognition.stop();
+    finishRecognition = null;
+  }
+  
+  const finishOverlay = document.getElementById("finish-overlay");
+  if (finishOverlay) finishOverlay.classList.add("hidden");
+  
+  selectRecipe(recipeId);
+  
+  recognition.start();
+  window.dispatchEvent(new Event("recipeReset"));
+}
+
+function updateFinishMessage() {
+  const recipe = getCurrentRecipe();
+  if (!recipe) return;
+  
+  const finishText = document.querySelector("#finish-card > p");
+  if (finishText) {
+    finishText.textContent = `Votre ${recipe.name} est prêt.`;
+  }
+}
+
 let finishRecognition = null;
 
 export function initFinishRecognition() {
+  updateFinishMessage();
+  
   if (finishRecognition) return;
 
   finishRecognition = new SpeechRecognition();
@@ -215,14 +268,15 @@ export function initFinishRecognition() {
 
       if (transcript.includes("nouvelle recette") || transcript.includes("nouvelle")) {
         if (finishMicLabel) finishMicLabel.textContent = "Nouvelle recette en cours…";
-        setTimeout(() => location.reload(), 500);
+        const randomRecipe = allRecipes[Math.floor(Math.random() * allRecipes.length)];
+        setTimeout(() => resetAndSelectRecipe(randomRecipe.id), 500);
         return;
       }
 
       for (const recipe of allRecipes) {
         if (transcript.includes(recipe.name.toLowerCase()) || recipe.keywords.some(kw => transcript.includes(kw.toLowerCase()))) {
           if (finishMicLabel) finishMicLabel.textContent = `${recipe.name} en cours…`;
-          setTimeout(() => location.reload(), 500);
+          setTimeout(() => resetAndSelectRecipe(recipe.id), 500);
           return;
         }
       }
