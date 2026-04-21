@@ -460,7 +460,7 @@ function updateBowl(id) {
     flourHeight = 15 + eggHeight;
     bowlFlourLayer.style.height = flourHeight + "px";
     bowlFlourLayer.style.background = LIQUID_COLORS.flour;
-  } else if (id === "chocolate") {
+  } else if (id === "chopped-chocolate") {
     chocolateHeight = 20 + flourHeight;
     bowlChocolateLayer.style.height = chocolateHeight + "px";
     bowlChocolateLayer.style.background = LIQUID_COLORS.chocolate;
