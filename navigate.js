@@ -1,4 +1,4 @@
-const TARGET_KEYWORD = "japon";
+const TARGET_KEYWORD = "lancer";
 const TARGET_URL = "/cooking";
 
 const statusElement = document.createElement('div');
@@ -23,7 +23,7 @@ setTimeout(() => { statusElement.style.opacity = '1'; }, 1000);
 
 let fallbackTimer = setTimeout(() => {
   const btn = document.createElement('button');
-  btn.textContent = "🎙️ Problème micro ? Cliquez ici pour entrer";
+  btn.textContent = "🎙️ Problème micro";
   btn.style.position = 'fixed';
   btn.style.bottom = '30px';
   btn.style.left = '50%';
