@@ -5,8 +5,10 @@ import { isBowlGrabbed, getBowlOffset } from "./drag.js";
 const bowl = document.getElementById("bowl");
 const glass = document.getElementById("glass");
 const glassLiquid = document.getElementById("glass-liquid");
+const glassIce = document.getElementById("glass-ice");
 const bowlMatchaLayer = document.getElementById("bowl-matcha-layer");
 const bowlWaterLayer = document.getElementById("bowl-water-layer");
+const bowlIceLayer = document.getElementById("bowl-ice-layer");
 
 let isActive = false;
 let tiltAngle = 0; // angle de basculement détecté
@@ -19,7 +21,7 @@ let currentStepId = null; // id de l'étape courante
 
 const TILT_THRESHOLD = 25; // degrés avant de commencer le versement
 const POUR_COMPLETE_ANGLE = 60; // degrés pour terminer
-const AUTO_POUR_RATE = 1.5; // vitesse de versement automatique (%/frame)
+const AUTO_POUR_RATE = 0.8; // vitesse de versement automatique (%/frame)
 
 export function setPourActive(active) {
   isActive = active;
@@ -50,32 +52,30 @@ export function resetPour() {
   autoPourStarted = false;
   glass.classList.remove("pour-ready");
   glassLiquid.style.height = "0px";
+  glassIce.style.height = "0px";
+  glassIce.style.bottom = "0px";
 }
 
-// Appelée à chaque frame depuis script.js
+function updateBowlTilt(shouldTilt) {
+  const { x, y } = getBowlOffset(); // récupère l'offset actuel du drag
+  const tilt = shouldTilt ? "rotateZ(45deg)" : "";
+  bowl.style.transform = `translate(${x}px, ${y}px) ${tilt}`;
+
+  // Transition douce seulement sur le tilt, pas sur le drag
+}
+
 export function processPour(hand, landmarks) {
   const bowlGrabbed = isBowlGrabbed();
-  const bowlOverGlass = isOverGlass(hand);
+  const overGlass = isOverGlass();
 
-  // Appliquer le tilt visuel si le bol est au-dessus du verre ET on est à l'étape "pour"
-  if (bowlGrabbed && bowlOverGlass && currentStepId === "pour") {
-    bowl.classList.add("tilting");
-  } else {
-    bowl.classList.remove("tilting");
-  }
+  // Incliner le bol si au-dessus du verre
+  updateBowlTilt(bowlGrabbed && overGlass);
 
-  // Si le bol est attrapé et au-dessus du verre, lancer le versement automatique
-  // SEULEMENT si on est à l'étape "pour"
-  if (
-    bowlGrabbed &&
-    bowlOverGlass &&
-    currentStepId === "pour" &&
-    !autoPourStarted
-  ) {
+  // Lancer le versement automatique dès que le bol arrive au-dessus du verre
+  if (bowlGrabbed && overGlass && !autoPourStarted) {
     autoPourStarted = true;
     isActive = true;
     pourProgress = 0;
-    tiltHistory = [];
     startHeight = Math.max(
       parseFloat(bowlMatchaLayer.style.height || 0),
       parseFloat(bowlWaterLayer.style.height || 0),
@@ -83,55 +83,17 @@ export function processPour(hand, landmarks) {
     glass.classList.add("pour-ready");
   }
 
-  // Si le bol n'est plus attrapé ou hors du verre, arrêter le versement automatique
-  if (!bowlGrabbed || !bowlOverGlass) {
+  // Stopper si le bol repart
+  if (!bowlGrabbed || !overGlass) {
     autoPourStarted = false;
-    // Ne pas réinitialiser isActive immédiatement, laisser le versement se terminer si en cours
   }
 
-  // Versement automatique
-  if (autoPourStarted && isActive && pourProgress < 100) {
+  // Versement automatique frame par frame
+  if (autoPourStarted && pourProgress < 100) {
     pourProgress = Math.min(100, pourProgress + AUTO_POUR_RATE);
     animatePour(pourProgress);
 
     if (pourProgress >= 100) {
-      finishPour();
-    }
-    return;
-  }
-
-  // Versement manuel (mode tilt-based) — seulement si isActive mais pas autoPourStarted
-  if (!isActive) return;
-  if (pourProgress >= 100) return;
-
-  // Calculer l'angle de basculement du poignet
-  if (landmarks && landmarks.length > 0) {
-    tiltAngle = calculateTiltAngle(landmarks);
-    tiltHistory.push(tiltAngle);
-    if (tiltHistory.length > 10) tiltHistory.shift();
-  }
-
-  // Si la main n'est pas au-dessus du verre, ignorer
-  if (!isOverGlass(hand)) return;
-
-  // Moyenne lissée de l'angle
-  const smoothTilt =
-    tiltHistory.length > 0
-      ? tiltHistory.reduce((a, b) => a + b) / tiltHistory.length
-      : 0;
-
-  // Si le basculement est suffisant
-  if (smoothTilt > TILT_THRESHOLD) {
-    // Progression du versement
-    pourProgress = Math.min(
-      100,
-      ((smoothTilt - TILT_THRESHOLD) / (POUR_COMPLETE_ANGLE - TILT_THRESHOLD)) *
-        100,
-    );
-
-    animatePour(pourProgress);
-
-    if (smoothTilt >= POUR_COMPLETE_ANGLE) {
       finishPour();
     }
   }
@@ -155,34 +117,49 @@ function calculateTiltAngle(landmarks) {
   return Math.abs(degrees);
 }
 
-function isOverGlass(hand) {
-  // Quand le bol est attrapé, on regarde sa position actuelle
-  // Sinon, on regarde la position de la main
+function isOverGlass() {
   const bowlRect = bowl.getBoundingClientRect();
   const glassRect = glass.getBoundingClientRect();
-  const margin = 50;
+  const marginX = 80; // ← petite marge horizontale
+  const marginY = 200; // ← grande marge verticale
 
-  // Position du centre du bol
   const bowlCenterX = bowlRect.left + bowlRect.width / 2;
   const bowlCenterY = bowlRect.top + bowlRect.height / 2;
 
   return (
-    bowlCenterX > glassRect.left - margin &&
-    bowlCenterX < glassRect.right + margin &&
-    bowlCenterY > glassRect.top - margin &&
-    bowlCenterY < glassRect.bottom + margin
+    bowlCenterX > glassRect.left - marginX &&
+    bowlCenterX < glassRect.right + marginX &&
+    bowlCenterY > glassRect.top - marginY &&
+    bowlCenterY < glassRect.bottom + marginY
   );
 }
-
 function animatePour(progress) {
+  // Afficher les glaçons quand le versement commence
+  if (progress > 0) {
+    glassIce.style.opacity = "1";
+  }
+
   // Vider le bol progressivement
   const emptyHeight = (startHeight * (100 - progress)) / 100;
   bowlMatchaLayer.style.height = emptyHeight + "px";
   bowlWaterLayer.style.height = emptyHeight * 0.3 + "px"; // garder ratio
+  bowlIceLayer.style.marginBottom = emptyHeight * 0.2 + "px"; // garder ratio
+  if (emptyHeight < 5) {
+    bowlIceLayer.style.opacity = 0;
+  }
 
   // Remplir le verre
-  const glassHeight = (60 * progress) / 100; // 60px = hauteur max du verre
+  const glassHeight = (100 * progress) / 100; // 100px = hauteur max du verre
   glassLiquid.style.height = glassHeight + "px";
+
+  // Positionner les glaçons au-dessus du liquide
+  const iceHeight = 15; // hauteur des glaçons
+  if (glassHeight > 0) {
+    glassIce.style.height = Math.min(iceHeight, glassHeight + iceHeight) + "px";
+    glassIce.style.bottom = glassHeight + "px";
+  } else {
+    glassIce.style.height = "0px";
+  }
 }
 
 function finishPour() {

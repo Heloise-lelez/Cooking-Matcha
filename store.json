@@ -7,10 +7,10 @@
       "description": "Un matcha glacé rafraîchissant",
       "keywords": ["Matcha latte froid", "froid"],
       "ingredients": [
-        { "id": "matcha", "name": "Matcha", "qty": "5 g", "color": "#7cb342" },
-        { "id": "water", "name": "Eau chaude", "qty": "30 ml", "color": "#42a5f5" },
-        { "id": "ice", "name": "Glaçon", "qty": "1 cubes", "color": "#29b6f6" },
-        { "id": "milk", "name": "Lait d'avoine", "qty": "200 ml", "color": "#fff3e0" }
+        { "id": "matcha", "name": "Matcha", "qty": "5 g" },
+        { "id": "water", "name": "Eau chaude", "qty": "30 ml" },
+        { "id": "ice", "name": "Glaçon", "qty": "3 cube" },
+        { "id": "milk", "name": "Lait d'avoine", "qty": "200 ml" }
       ],
       "steps": [
         { "id": "matcha", "text": "Tamiser 6g de matcha", "duration": "30s" },
@@ -18,7 +18,7 @@
         { "id": "whisk", "text": "Fouetter en W jusqu'à mousser", "duration": "45s" },
         { "id": "ice", "text": "Ajouter les glaçons", "duration": "15s" },
         { "id": "milk", "text": "Verser 200ml lait d'avoine", "duration": "20s" },
-        { "id": "pour", "text": "Verser dans une tasse", "duration": "20s" }
+        { "id": "pour", "text": "Verser dans un verre", "duration": "20s" }
       ]
     },
     {
@@ -37,7 +37,7 @@
         { "id": "water", "text": "Ajouter 30ml eau chaude", "duration": "10s" },
         { "id": "whisk", "text": "Fouetter en W jusqu'à mousser", "duration": "45s" },
         { "id": "milk", "text": "Verser 200ml lait d'avoine", "duration": "20s" },
-        { "id": "pour", "text": "Verser dans une tasse", "duration": "20s" }
+        { "id": "pour", "text": "Verser dans un verre", "duration": "20s" }
       ]
     },
     {
@@ -54,7 +54,35 @@
         { "id": "matcha", "text": "Tamiser 10g de matcha", "duration": "45s" },
         { "id": "water", "text": "Ajouter 70ml eau à 70°C", "duration": "15s" },
         { "id": "whisk", "text": "Fouetter minutieusement", "duration": "90s" },
-        { "id": "pour", "text": "Verser dans une tasse", "duration": "20s" }
+        { "id": "pour", "text": "Verser dans un verre", "duration": "20s" }
+      ]
+    },
+    {
+      "id": "cookie",
+      "name": "Cookie Matcha",
+      "type": "baking",
+      "description": "Un cookie délicieux",
+      "keywords": ["cookie", "cookie matcha"],
+      "ingredients": [
+        { "id": "matcha", "name": "Matcha", "qty": "150 g" },
+        { "id": "butter", "name": "Beurre demi-sel", "qty": "75 g" },
+        { "id": "sugar", "name": "Sucre", "qty": "85 g" },
+        { "id": "egg", "name": "Oeuf", "qty": "1" },
+        { "id": "flour", "name": "Farine", "qty": "150 g" },
+        { "id": "chocolate", "name": "Chocolat blanc", "qty": "1 tab" }
+      ],
+      "steps": [
+        { "id": "matcha", "text": "Tamiser le matcha", "duration": "20s" },
+        { "id": "butter", "text": "Ajouter le beurre demi-sel", "duration": "45s" },
+        { "id": "sugar", "text": "Ajouter le sucre", "duration": "15s" },
+        { "id": "egg", "text": "Ajouter l'oeuf", "duration": "20s" },
+        { "id": "whisk", "text": "Mélanger le tout", "duration": "90s" },
+        { "id": "flour", "text": "Tamiser la farine", "duration": "20s" },
+        { "id": "chocolate", "text": "Déposer le chocolat sur la planche",  "duration": "10s" },
+        { "id": "chop", "text": "Hacher le chocolat",  "duration": "60s" },
+        { "id": "chopped-chocolate", "text": "Ajouter le chocolat haché",  "duration": "20s" },
+        { "id": "whisk", "text": "Mélanger le tout", "duration": "90s" },
+        { "id": "oven", "text": "Mettre au four", "duration": "90s" }
       ]
     }
   ]

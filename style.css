@@ -17,6 +17,10 @@
   --done-border: #b0c8a0;
 
   font-family: "DM Sans", sans-serif;
+
+  --dx: 12px;
+  --dy: -8px;
+  --rot: 6deg;
 }
 
 *,
@@ -229,15 +233,15 @@ h1 {
 }
 .step.active .step-check {
   border-color: var(--matcha);
-  animation: pulse-check 1.5s ease-in-out infinite;
+  animation: pulse-check 2.5s ease-in-out infinite;
 }
 @keyframes pulse-check {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(92, 138, 74, 0.3);
+    box-shadow: 0 0 0 0 rgba(92, 138, 74, 0.15);
   }
   50% {
-    box-shadow: 0 0 0 5px rgba(92, 138, 74, 0);
+    box-shadow: 0 0 0 3px rgba(92, 138, 74, 0);
   }
 }
 .step-text {
@@ -288,14 +292,14 @@ h1 {
   height: 6px;
   background: var(--matcha);
   border-radius: 50%;
-  animation: blink 1.4s ease-in-out infinite;
+  animation: blink 2.2s ease-in-out infinite;
 }
 #mic-status.listening {
   background: var(--matcha-pale);
   border: 1px solid var(--matcha-mid);
 }
 #mic-status.listening .mic-icon {
-  animation: pulse 1.4s ease-in-out infinite;
+  animation: pulse 2.2s ease-in-out infinite;
 }
 @keyframes pulse {
   0%,
@@ -304,8 +308,8 @@ h1 {
     opacity: 1;
   }
   50% {
-    transform: scale(1.2);
-    opacity: 0.7;
+    transform: scale(1.1);
+    opacity: 0.85;
   }
 }
 @keyframes blink {
@@ -314,7 +318,7 @@ h1 {
     opacity: 1;
   }
   50% {
-    opacity: 0.2;
+    opacity: 0.4;
   }
 }
 
@@ -359,11 +363,33 @@ h1 {
   font-weight: 500;
 }
 
-#bowl-container {
+#bowl-container,
+#glass-container,
+#oven-container,
+#cutting-board-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
+}
+#glass-ice {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 0;
+  transition:
+    height 0.08s ease,
+    opacity 0.15s ease;
+  pointer-events: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  padding-bottom: 2px;
+  opacity: 0;
+  flex-wrap: wrap;
 }
 
 #bowl {
@@ -375,12 +401,13 @@ h1 {
   position: relative;
   overflow: hidden;
   box-shadow: inset 0 8px 16px rgba(0, 0, 0, 0.08);
-  transform-origin: right center;
-  transition: transform 0.3s ease;
+  transform-origin: left center;
+  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 #bowl.tilting {
-  transform: rotateZ(-35deg);
+  transform: rotateZ(-45deg);
 }
+
 #bowl::before {
   content: "";
   position: absolute;
@@ -399,7 +426,9 @@ h1 {
   height: 0;
   background: #4a7c35;
   border-radius: 0 0 68px 68px;
-  transition: height 0.6s ease;
+  transition:
+    height 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    background 0.8s ease;
 }
 
 #bowl-water-layer {
@@ -411,8 +440,42 @@ h1 {
   background: rgba(168, 206, 222, 0.5);
   border-radius: 0 0 68px 68px;
   transition:
-    height 0.6s ease,
+    height 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    background 1s ease;
+}
+
+#bowl-butter-layer,
+#bowl-sugar-layer,
+#bowl-egg-layer,
+#bowl-flour-layer,
+#bowl-matcha-layer-2,
+#bowl-chocolate-layer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-radius: 0 0 68px 68px;
+  transition:
+    height 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
     background 0.8s ease;
+}
+
+#bowl-ice-layer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-radius: 0 0 68px 68px;
+  transition:
+    height 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    margin-bottom 0.8s ease;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  z-index: 2;
 }
 
 /* Pendant le fouettage : les couches deviennent progressivement opales */
@@ -438,14 +501,17 @@ h1 {
 @keyframes whisk-swirl {
   0%,
   100% {
-    transform: scaleX(0.95);
+    transform: scaleX(0.98);
   }
   50% {
-    transform: scaleX(1.05);
+    transform: scaleX(1.02);
   }
 }
 
-#bowl-label {
+#bowl-label,
+#glass-label,
+#oven-label,
+#cutting-board-label {
   font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -476,7 +542,9 @@ h1 {
   height: 100%;
   background: var(--matcha);
   border-radius: 3px;
-  transition: width 0.3s ease;
+  transition:
+    width 0.4s ease,
+    background 0.6s ease;
 }
 #whisk-gauge-label {
   font-size: 11px;
@@ -501,7 +569,7 @@ h1 {
   padding: 10px;
   background: #fff;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 5px;
   cursor: default;
   transition:
     opacity 0.3s,
@@ -525,7 +593,7 @@ h1 {
   flex-shrink: 0;
 }
 .matcha-visual {
-  background: #5c8a4a;
+  background: var(--matcha);
 }
 .water-visual {
   background: #a8cede;
@@ -549,6 +617,21 @@ h1 {
   background: #fcf0a8;
   border: 1.5px solid #ffeb7d;
 }
+
+.ice-cube {
+  width: 30px;
+  height: 30px;
+  background: #d8eef8;
+  border: 1px solid #a8cce0;
+  border-radius: 5px;
+  flex-shrink: 0;
+}
+
+.matcha-ceremonial-visual {
+  background: #4a7035;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
 .sugar-visual {
   background: #eaebe5;
   border: 1.5px solid #c4c4c4;
@@ -670,46 +753,59 @@ h1 {
 }
 #bowl.grabbed {
   opacity: 0.5;
-  transform: scale(0.95);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  transition:
-    opacity 0.15s ease,
-    transform 0.15s ease,
-    box-shadow 0.15s ease;
 }
-/* ── Tasse ── */
+/* ══ Verre ════════════════════════════════════════════════ */
 #glass-container {
   position: absolute;
-  right: 120px;
+  right: 100px;
   top: 50%;
   transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
 #glass {
-  width: 60px;
-  height: 50px;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.15),
-    rgba(255, 255, 255, 0.05)
-  );
-  border: 2px solid var(--ink-light);
-  border-radius: 0 0 6px 6px;
+  width: 70px;
+  height: 130px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 2px solid rgba(170, 160, 145, 0.55);
+  border-top: none;
+  border-radius: 3px 3px 10px 10px;
   position: relative;
   overflow: hidden;
+  box-shadow:
+    inset 4px 0 10px rgba(255, 255, 255, 0.09),
+    inset -2px 0 6px rgba(0, 0, 0, 0.04);
 }
 
-/* Anse de la tasse */
+/* Lèvre du verre */
+#glass::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  left: -3px;
+  right: -3px;
+  height: 7px;
+  background: rgba(170, 160, 145, 0.6);
+  border-radius: 4px 4px 0 0;
+  border: 1.5px solid rgba(170, 160, 145, 0.4);
+  border-bottom: none;
+}
+
+/* Reflet paroi gauche */
 #glass::after {
   content: "";
   position: absolute;
-  right: -18px;
-  top: 6px;
-  width: 20px;
-  height: 28px;
-  border: 2px solid var(--ink-light);
-  border-left: none;
-  border-radius: 0 12px 12px 0;
+  top: 10px;
+  left: 7px;
+  width: 5px;
+  height: 65%;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+  pointer-events: none;
 }
 
 #glass-liquid {
@@ -717,17 +813,9 @@ h1 {
   bottom: 0;
   width: 100%;
   height: 0;
-  background: linear-gradient(180deg, #7ab060, #5c8a4a);
-  transition: height 0.05s ease;
+  background: linear-gradient(180deg, #7ab060, var(--matcha));
+  transition: height 0.08s ease;
   border-radius: 0 0 4px 4px;
-}
-
-#glass-label {
-  font-size: 11px;
-  color: var(--ink-mid);
-  margin-top: 12px;
-  text-align: center;
-  font-weight: 500;
 }
 
 #glass-container.pour-ready #glass {
@@ -766,6 +854,290 @@ h1 {
 }
 #whisk-zone.whisk-ready #whisk-gauge-bar {
   border: 1px solid var(--matcha-pale);
+}
+
+/* ── Four ── */
+#oven-container {
+  position: absolute;
+  left: 120px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+#oven {
+  width: 130px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Corps principal */
+.oven-body {
+  width: 130px;
+  height: 120px;
+  background: #d4c8b8;
+  border-radius: 8px 8px 0 0;
+  border: 2px solid #a89880;
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    inset 0 2px 4px rgba(255, 255, 255, 0.3),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* Vitre de la porte — occupe la majorité du corps */
+.oven-window {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  bottom: 28px;
+  border-radius: 5px;
+  background: #2e2418;
+  border: 2px solid #7a6850;
+  overflow: hidden;
+}
+
+/* Reflet vitre */
+.oven-window::before {
+  content: "";
+  position: absolute;
+  top: 5px;
+  left: 7px;
+  width: 28px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+}
+
+/* Chaleur intérieure */
+.oven-heat {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at 50% 100%,
+    rgba(255, 120, 20, 0.55) 0%,
+    rgba(255, 60, 0, 0.15) 60%,
+    transparent 100%
+  );
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+#oven-container.oven-ready .oven-heat {
+  opacity: 1;
+  animation: oven-flicker 1.6s ease-in-out infinite;
+}
+
+@keyframes oven-flicker {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Bandeau boutons en bas du corps */
+.oven-knobs {
+  position: absolute;
+  bottom: 6px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+}
+
+.oven-knob {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #8a7860;
+  border: 1.5px solid #6a5840;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Highlight actif */
+#oven-container.oven-ready .oven-body {
+  border-color: var(--matcha);
+  box-shadow:
+    inset 0 2px 4px rgba(255, 255, 255, 0.3),
+    0 0 0 3px var(--matcha-pale);
+}
+
+#oven-container.oven-cooking .oven-heat {
+  opacity: 1;
+  animation: oven-flicker 0.6s ease-in-out infinite;
+}
+@keyframes oven-door-open {
+  0% {
+    transform: rotateX(0deg);
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.2);
+  }
+  100% {
+    transform: rotateX(120deg);
+    filter: brightness(1.4);
+    opacity: 0.7;
+  }
+}
+
+#oven-container.oven-complete {
+  animation: ovenSuccess 0.4s ease;
+}
+
+@keyframes ovenSuccess {
+  0% {
+    transform: translateY(-50%) scale(1);
+  }
+  50% {
+    transform: translateY(-50%) scale(1.05);
+  }
+  100% {
+    transform: translateY(-50%) scale(1);
+  }
+}
+
+#oven-liquid {
+  display: none;
+}
+
+#oven-label {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--wood-grain);
+}
+
+/* ── Planche à découper ── */
+#cutting-board-container {
+  position: absolute;
+  bottom: 20%;
+  right: 12px;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+#cutting-board {
+  width: 200px;
+  height: 140px;
+  background: #c8a96e;
+  border-radius: 10px;
+  border: 2px solid #a07840;
+  position: relative;
+  overflow: visible;
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.12),
+    0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+#cutting-board.drop-hover {
+  border-color: var(--matcha);
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.12),
+    0 0 0 3px var(--matcha-pale);
+}
+
+/* Petite poignée à droite */
+#cutting-board::after {
+  content: "";
+  position: absolute;
+  right: -22px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 44px;
+  background: #b89050;
+  border-radius: 0 8px 8px 0;
+  border: 2px solid #a07840;
+  border-left: none;
+}
+
+/* Rainures décoratives */
+.board-grain {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  height: 1px;
+  background: rgba(160, 120, 60, 0.25);
+  border-radius: 1px;
+}
+.board-grain:nth-child(1) {
+  top: 35px;
+}
+.board-grain:nth-child(2) {
+  top: 70px;
+}
+.board-grain:nth-child(3) {
+  top: 105px;
+}
+
+/* ── Bloc de chocolat ── */
+#chocolate-block {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: none; /* affiché via JS quand l'ingrédient est déposé */
+}
+
+#chocolate-block.visible {
+  display: block;
+}
+
+.choc-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 22px);
+  grid-template-rows: repeat(3, 22px);
+  gap: 2px;
+  padding: 4px;
+  background: #e8d9a0;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.choc-square {
+  width: 22px;
+  height: 22px;
+  background: #fdf3c0;
+  border-radius: 2px;
+  border: 1px solid #c9a84c;
+  transition:
+    opacity 0.3s,
+    transform 0.3s;
+}
+
+.choc-square.cut {
+  opacity: 0;
+  transform: scale(0.6) rotate(15deg);
+}
+
+/* Highlight quand la planche est la cible active */
+#cutting-board-container.chop-active #cutting-board {
+  border-color: var(--matcha);
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.12),
+    0 0 0 3px var(--matcha-pale),
+    0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+#cutting-board-label {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--wood-grain);
 }
 
 /* Croix d'erreur */
@@ -823,4 +1195,65 @@ h1 {
 
 .hidden {
   display: none !important;
+}
+
+#chocolate-block.breaking {
+  animation: crack 220ms ease-out;
+}
+
+@keyframes crack {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03) rotate(-1deg);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.choc-piece {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  opacity: 0;
+  transform: translate(0, 0) scale(0.7);
+  transition:
+    transform 220ms ease,
+    opacity 220ms ease;
+  display: block;
+  padding: 0;
+  background: none;
+  border: none;
+}
+
+#chocolate-pieces.visible .choc-piece {
+  opacity: 1;
+  transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(1);
+}
+
+.chopped-chocolate-visual {
+  width: 18px;
+  height: 18px;
+  background: #e8d9a0;
+  border: 1px solid #d4b896;
+  border-radius: 6px;
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.6),
+    0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+#chocolate-pieces {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 96px;
+  height: 78px;
+  pointer-events: none; /* au début, pour ne pas gêner la découpe */
+}
+
+#chocolate-pieces.visible {
+  pointer-events: auto; /* activé après découpe pour drag */
 }
