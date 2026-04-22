@@ -137,15 +137,15 @@ function finishWhisk() {
     const chocolateHeight = parseFloat(chocolateLayer.style.height) || 0;
     const totalHeight = matchaHeight + waterHeight + butterHeight + sugarHeight + eggHeight + flourHeight + chocolateHeight;
 
-    if (eggHeight > 0 ) {
+    if (chocolateHeight > 0 || flourHeight > 0) {
+      eggLayer.style.opacity = "0";
+      flourLayer.style.opacity = "0";
+      chocolateLayer.style.background = "#87c559";
+    } else if (eggHeight > 0 ) {
       matchaLayer.style.opacity = "0";
       butterLayer.style.opacity = "0";
       sugarLayer.style.opacity = "0";
       eggLayer.style.background = "#6a9c45";
-    } else if (chocolateHeight > 0) {
-      eggLayer.style.opacity = "0";
-      flourLayer.style.opacity = "0";
-      chocolateLayer.style.background = "#6a9c45";
     } else {
       // Augmenter la hauteur du matcha pour couvrir les deux couches
       matchaLayer.style.height = totalHeight + "px";
